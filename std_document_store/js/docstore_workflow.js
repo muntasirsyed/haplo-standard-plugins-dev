@@ -14,8 +14,6 @@ P.use("std:workflow");
 // where spec is an object with properties:
 //    name: document store name
 //    title: Title of this form
-//    titleLowerCase: Title to use when the lower case version of title is to be
-//              displayed but acryonyms or proper nouns need to be preserved 
 //    path: URL path where the handlers should be implemented
 //    panel: Which panel the view link should appear in
 //    priority: The priority within the panel, defaulting to "default"
@@ -48,6 +46,12 @@ var Delegate = function() { };
 Delegate.prototype = {
     keyToKeyId: function(key) { return key.workUnit.id; }
 };
+
+P.implementService("std:document_store:workflow:form_action_allowed", function(M, form, user, action) {
+    var workflow = O.service("std:workflow:definition_for_name", M.workUnit.workType);
+    var spec = workflow.documentStore[form].delegate;
+    return can(M, user, spec, action);
+});
 
 var can = function(M, user, spec, action) {
     var list = spec[action];
