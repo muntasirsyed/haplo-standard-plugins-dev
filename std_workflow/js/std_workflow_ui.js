@@ -30,21 +30,12 @@ _.extend(P.Workflow.prototype, {
 
 _.extend(P.WorkflowInstanceBase.prototype.$fallbackImplementations, {
 
-    // QUICK IMPERSONATE PROOF OF CONCEPT
-    // abuse workUnit renderer to inject the information/javascript we need
     $renderWork: {selector:{}, handler:function(M, W) {
-        var uid, currentlyWith = M.workUnit.actionableBy;
-        // if actionable user is a group, get the first member of that group's user id
-        if(currentlyWith.isGroup) { 
-            var members = currentlyWith.loadAllMembers();
-            if(members.length) { uid = members[0].id; }
-        } else { uid = currentlyWith.id; }
         W.render({
             workUnit: M.workUnit,
             processName: M.getWorkflowProcessName(),
             status: M._getText(['status'], [M.state]),
-            timeline: M.renderTimelineDeferred(),
-            currentlyWithUid: O.currentUser.id !== uid ? uid : undefined
+            timeline: M.renderTimelineDeferred()
         }, P.template("default-work"));
         return true;
     }},
@@ -121,6 +112,7 @@ _.extend(P.WorkflowInstanceBase.prototype, {
         this._callHandler('$actionPanelTransitionUI', builder);
         this._callHandler('$actionPanel', builder);
         this._addAdminActionPanelElements(builder);
+        if(O.PLUGIN_DEBUGGING_ENABLED) { this._addDebugActionPanelElements(builder); }
         // Add any configured headings to the panels in the action panel, if they have something in them
         var headings = this.$panelHeadings;
         if(headings) {
