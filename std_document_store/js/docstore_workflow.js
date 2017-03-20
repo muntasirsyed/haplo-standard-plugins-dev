@@ -433,4 +433,27 @@ P.workflow.registerWorkflowFeature("std:document_store", function(workflow, spec
         }, "workflow/admin/overview");
     });
 
+    plugin.respond("GET,POST", spec.path+'/admin/view-document', [
+        {pathElement:0, as:"workUnit", workType:workflow.fullName, allUsers:true},
+        {pathElement:1, as:"int"}
+    ], function(E, workUnit, requestedVersion) {
+        if(!(O.PLUGIN_DEBUGGING_ENABLED && O.currentUser.isMemberOf(Group.Administrators))) { O.stop("Not permitted."); }
+        E.setResponsiblePlugin(P);  // take over as source of templates, etc
+        var M = workflow.instance(workUnit);
+        var instance = docstore.instance(M);
+        var entry = _.find(instance.history, function(v) {
+            return v.version === requestedVersion;
+        });
+        E.render({
+            pageTitle: M.title+': '+(spec.title || '????'),
+            backLink: spec.path+'/admin/'+M.workUnit.id,
+            backLinkText: "Admin",
+            M: M,
+            path: spec.path,
+            instance: instance,
+            entry: entry,
+            document: JSON.stringify(entry.document, undefined, 2)
+        }, "workflow/admin/view-document");
+    });
+
 });
