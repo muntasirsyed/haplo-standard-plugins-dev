@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.         */
 
 var allowDebugging = function() {
-    return (O.PLUGIN_DEBUGGING_ENABLED && O.impersonatingUser && O.impersonatingUser.isSuperUser);
+    return (O.PLUGIN_DEBUGGING_ENABLED && O.currentAuthenticatedUser && O.currentAuthenticatedUser.isSuperUser);
 };
 
 var getCheckedInstanceForDebugging = function(workUnit) {
-    if(!allowDebugging) { return; }
+    if(!allowDebugging()) { return; }
     var workflow = P.allWorkflows[workUnit.workType];
     if(!workflow) { O.stop("Workflow not implemented"); }
     return workflow.instance(workUnit);
@@ -18,7 +18,7 @@ var getCheckedInstanceForDebugging = function(workUnit) {
 // --------------------------------------------------------------------------
 
 P.WorkflowInstanceBase.prototype._addDebugActionPanelElements = function(builder) {
-    if(!allowDebugging) { return; }
+    if(!allowDebugging()) { return; }
     var uid, currentlyWith = this.workUnit.actionableBy;
     // if actionable user is a group, get the first member of that group's user id
     if(currentlyWith.isGroup) { 
