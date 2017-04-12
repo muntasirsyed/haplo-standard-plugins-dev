@@ -70,8 +70,12 @@ P.implementService("std:document_store:workflow:form_action_allowed", function(M
     return can(M, user, spec, action);
 });
 
+var allowDebugging = function() {
+    return (O.PLUGIN_DEBUGGING_ENABLED && O.currentAuthenticatedUser && O.currentAuthenticatedUser.isSuperUser);
+};
+
 var can = function(M, user, spec, action) {
-    if(O.PLUGIN_DEBUGGING_ENABLED && O.currentUser.isMemberOf(Group.Administrators)) { return true; }
+    if(allowDebugging()) { return true; }
     var list = spec[action];
     if(!list) { return false; }
     var allow = false, deny = false;
@@ -138,7 +142,7 @@ P.workflow.registerWorkflowFeature("std:document_store", function(workflow, spec
         workflow.documentStore = {}; 
         if(O.PLUGIN_DEBUGGING_ENABLED) {
             workflow.actionPanel({}, function(M, builder) {
-                if(O.currentUser.isMemberOf(Group.Administrators)) {
+                if(O.currentAuthenticatedUser && O.currentAuthenticatedUser.isSuperUser) {
                     var panel = builder.panel(8888999).
                         element(0, {title:"Docstore admin"});
                 }
@@ -218,7 +222,7 @@ P.workflow.registerWorkflowFeature("std:document_store", function(workflow, spec
     }
 
     workflow.actionPanelTransitionUI({}, function(M, builder) {
-        if(O.PLUGIN_DEBUGGING_ENABLED && O.currentUser.isMemberOf(Group.Administrators)) { return; }
+        if(!allowDebugging()) { return; }
         if(can(M, O.currentUser, spec, 'edit')) {
             var searchPath = "docstore-panel-edit-link:"+spec.name;
             var instance = docstore.instance(M);
@@ -233,7 +237,7 @@ P.workflow.registerWorkflowFeature("std:document_store", function(workflow, spec
     });
     if(O.PLUGIN_DEBUGGING_ENABLED) {
         workflow.actionPanel({}, function(M, builder) {
-            if(O.currentUser.isMemberOf(Group.Administrators)) {
+            if(O.currentAuthenticatedUser && O.currentAuthenticatedUser.isSuperUser) {
                 builder.panel(8888999).
                     link("default", spec.path+'/admin/'+M.workUnit.id, spec.title);
             }
@@ -421,7 +425,7 @@ P.workflow.registerWorkflowFeature("std:document_store", function(workflow, spec
     plugin.respond("GET,POST", spec.path+'/admin', [
         {pathElement:0, as:"workUnit", workType:workflow.fullName, allUsers:true}
     ], function(E, workUnit) {
-        if(!(O.PLUGIN_DEBUGGING_ENABLED && O.currentUser.isMemberOf(Group.Administrators))) { O.stop("Not permitted."); }
+        if(!allowDebugging()) { O.stop("Not permitted."); }
         E.setResponsiblePlugin(P);  // take over as source of templates, etc
         var M = workflow.instance(workUnit);
         var instance = docstore.instance(M);
@@ -454,7 +458,7 @@ P.workflow.registerWorkflowFeature("std:document_store", function(workflow, spec
         {pathElement:0, as:"workUnit", workType:workflow.fullName, allUsers:true},
         {pathElement:1, as:"int"}
     ], function(E, workUnit, requestedVersion) {
-        if(!(O.PLUGIN_DEBUGGING_ENABLED && O.currentUser.isMemberOf(Group.Administrators))) { O.stop("Not permitted."); }
+        if(!allowDebugging()) { O.stop("Not permitted."); }
         E.setResponsiblePlugin(P);  // take over as source of templates, etc
         var M = workflow.instance(workUnit);
         var instance = docstore.instance(M);
